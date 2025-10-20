@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TrustCheck — Verify Profile or Message</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9fafb;
+      color: #333;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #2b4eff;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 15px;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #2b4eff;
+      color: #fff;
+      border: none;
+      padding: 12px 20px;
+      margin-top: 20px;
+      cursor: pointer;
+      width: 100%;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #1e36c4;
+    }
+    .result {
+      margin-top: 25px;
+      padding: 15px;
+      border-radius: 6px;
+      background: #f3f4f6;
+    }
+    .consent {
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    .loading {
+      font-style: italic;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🔍 TrustCheck</h1>
+  <p>Check if a message, image, email, or phone might be part of a scam. Results are anonymous and never stored.</p>
+
+  <label for="imageUrl">Image URL (optional)</label>
+  <input type="url" id="imageUrl" placeholder="Paste image link or leave blank" />
+
+  <label for="email">Email address (optional)</label>
+  <input type="email" id="email" placeholder="someone@example.com" />
+
+  <label for="phone">Phone number (optional)</label>
+  <input type="tel" id="phone" placeholder="+1 555 555 5555" />
+
+  <div class="consent">
+    <input type="checkbox" id="consent" />
+    <label for="consent">I have permission to check this information and understand results are for awareness only.</label>
+  </div>
+
+  <button id="checkButton">Check for Scam</button>
+
+  <div id="output" class="result"></div>
+
+  <script>
+    const API_URL = "https://YOUR_WORKER_URL_HERE/api/verify"; // Replace after deploying Worker
+
+    document.getElementById('checkButton').addEventListener('click', async () => {
+      const consent = document.getElementById('consent').checked;
+      if (!consent) {
+        alert("Please agree to the consent notice first.");
+        return;
+      }
+
+      const imageUrl = document.getElementById('imageUrl').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const output = document.getElementById('output');
+
+      output.innerHTML = "<p class='loading'>Checking... please wait ⏳</p>";
+
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ imageUrl, email, phone })
+        });
+        const result = await response.json();
+
+        if (result.error) {
+          output.innerHTML = `<p>⚠️ Error: ${result.error}</p>`;
+        } else {
+          output.innerHTML = `
+            <h3>Results</h3>
+            <p><strong>Image:</strong> ${result.imageCheck}</p>
+            <p><strong>Email:</strong> ${result.emailCheck}</p>
+            <p><strong>Phone:</strong> ${result.phoneCheck}</p>
+          `;
+        }
+      } catch (err) {
+        console.error(err);
+        output.innerHTML = `<p>⚠️ Something went wrong. Please try again later.</p>`;
+      }
+    });
+  </script>
+
+</body>
+</html>
